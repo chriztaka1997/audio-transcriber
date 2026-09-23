@@ -1,0 +1,330 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+header {
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    color: #fff;
+}
+
+.subtitle {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #ccc;
+}
+
+/* Form */
+.form-section {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-bottom: 0.3rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+textarea {
+    resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #4a9eff;
+}
+
+select {
+    cursor: pointer;
+}
+
+.input-with-button {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.input-with-button input {
+    flex: 1;
+}
+
+.input-with-button button {
+    padding: 0.5rem 1rem;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.input-with-button button:hover {
+    background: #444;
+}
+
+.dir-status {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
+    min-height: 1.2em;
+}
+
+.dir-status.valid {
+    color: #4caf50;
+}
+
+.dir-status.invalid {
+    color: #f44336;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    padding-top: 1.2rem;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 0.7rem;
+    background: #4a9eff;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background: #3a8eef;
+}
+
+.btn-primary:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* Jobs */
+.jobs-section {
+    position: relative;
+}
+
+.job-count {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: normal;
+}
+
+.no-jobs {
+    text-align: center;
+    color: #555;
+    padding: 2rem;
+}
+
+.job-card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.job-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #fff;
+    word-break: break-all;
+}
+
+.job-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-cancel {
+    padding: 0.25rem 0.75rem;
+    background: transparent;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #999;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btn-cancel:hover {
+    border-color: #f44336;
+    color: #f44336;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.status-queued { background: #333; color: #999; }
+.status-downloading { background: #1a3a5c; color: #4a9eff; }
+.status-downloaded { background: #1a3a5c; color: #4a9eff; }
+.status-transcribing { background: #1a4a2a; color: #4caf50; }
+.status-completed { background: #1a4a2a; color: #4caf50; }
+.status-failed { background: #4a1a1a; color: #f44336; }
+.status-cancelled { background: #333; color: #666; }
+
+/* Progress bars */
+.progress-section {
+    margin-top: 0.5rem;
+}
+
+.progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+}
+
+.progress-label {
+    font-size: 0.8rem;
+    color: #888;
+    width: 85px;
+    flex-shrink: 0;
+}
+
+.progress-bar-container {
+    flex: 1;
+    height: 6px;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-bar.download {
+    background: #4a9eff;
+}
+
+.progress-bar.transcribe {
+    background: #4caf50;
+}
+
+.progress-info {
+    font-size: 0.8rem;
+    color: #888;
+    width: 90px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Output paths */
+.job-output {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.job-output span {
+    display: block;
+    word-break: break-all;
+}
+
+.job-error {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #f44336;
+    word-break: break-all;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
