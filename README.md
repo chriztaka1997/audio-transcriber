@@ -16,20 +16,13 @@ A local web app to download videos and transcribe them using OpenAI's Whisper mo
 - Python 3.10+
 - ffmpeg (`brew install ffmpeg`)
 
-## Setup
+## Quick Start
 
 ```bash
-cd audio-transcriber
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+./start.sh
 ```
 
-## Usage
-
-```bash
-python run.py
-```
+This handles everything — creates a virtual environment, installs dependencies (first run only), and starts the server.
 
 Open [http://localhost:8000](http://localhost:8000) in your browser.
 
