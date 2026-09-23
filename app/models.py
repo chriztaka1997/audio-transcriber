@@ -21,6 +21,7 @@ class JobCreate(BaseModel):
     video_name: Optional[str] = None
     transcript_name: Optional[str] = None
     whisper_model: str = "turbo"
+    language: str = "en"
     generate_srt: bool = False
 
 
@@ -31,6 +32,7 @@ class Job(BaseModel):
     video_name: Optional[str] = None
     transcript_name: Optional[str] = None
     whisper_model: str = "turbo"
+    language: str = "en"
     generate_srt: bool = False
     status: JobStatus = JobStatus.queued
     download_progress: float = 0.0

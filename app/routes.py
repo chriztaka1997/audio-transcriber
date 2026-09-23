@@ -1,3 +1,4 @@
+import asyncio
 import os
 from fastapi import APIRouter, HTTPException
 
@@ -45,24 +46,77 @@ async def cancel_job(job_id: str):
     return {"status": "cancelled"}
 
 
+@router.post("/api/jobs/{job_id}/retry")
+async def retry_job(job_id: str):
+    qm = get_queue_manager()
+    job = await qm.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.status.value not in ("failed", "cancelled"):
+        raise HTTPException(status_code=400, detail="Only failed or cancelled jobs can be retried")
+    await qm.retry_job(job_id)
+    return {"status": "retrying"}
+
+
 @router.get("/api/models")
 async def list_models():
     return ["tiny", "base", "small", "medium", "large", "turbo"]
 
 
-@router.post("/api/validate-dir")
-async def validate_dir(body: dict):
-    path = body.get("path", "")
-    if not path:
-        return {"valid": False, "error": "Path is empty"}
-    expanded = os.path.expanduser(path)
-    if os.path.isdir(expanded) and os.access(expanded, os.W_OK):
-        return {"valid": True, "resolved": expanded}
-    if not os.path.exists(expanded):
-        # Try creating it
-        try:
-            os.makedirs(expanded, exist_ok=True)
-            return {"valid": True, "resolved": expanded}
-        except OSError as e:
-            return {"valid": False, "error": str(e)}
-    return {"valid": False, "error": "Path is not a writable directory"}
+@router.post("/api/jobs/transcribe-only")
+async def create_transcribe_only_job(body: dict):
+    video_path = body.get("video_path", "")
+    output_dir = body.get("output_dir", "")
+    transcript_name = body.get("transcript_name", None)
+    whisper_model = body.get("whisper_model", "turbo")
+    language = body.get("language", "en")
+    generate_srt = body.get("generate_srt", False)
+
+    if not video_path or not os.path.exists(video_path):
+        raise HTTPException(status_code=400, detail=f"File not found: {video_path}")
+    if not output_dir:
+        output_dir = os.path.dirname(video_path)
+
+    from .models import JobCreate
+    job_create = JobCreate(
+        url="local://" + video_path,
+        output_dir=output_dir,
+        video_name=os.path.splitext(os.path.basename(video_path))[0],
+        transcript_name=transcript_name,
+        whisper_model=whisper_model,
+        language=language,
+        generate_srt=generate_srt,
+    )
+    qm = get_queue_manager()
+    job = await qm.add_transcribe_only_job(job_create, video_path)
+    return job.model_dump()
+
+
+@router.post("/api/pick-file")
+async def pick_file():
+    proc = await asyncio.create_subprocess_exec(
+        "osascript", "-e",
+        'POSIX path of (choose file with prompt "Select video/audio file" of type {"public.movie", "public.audio"})',
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, _ = await proc.communicate()
+    file_path = stdout.decode().strip()
+    if file_path:
+        return {"path": file_path}
+    return {"path": None}
+
+
+@router.post("/api/pick-folder")
+async def pick_folder():
+    proc = await asyncio.create_subprocess_exec(
+        "osascript", "-e",
+        'POSIX path of (choose folder with prompt "Select destination folder")',
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, _ = await proc.communicate()
+    folder = stdout.decode().strip().rstrip("/")
+    if folder:
+        return {"path": folder}
+    return {"path": None}

@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import Optional
 
 from .database import Database
@@ -24,12 +25,33 @@ class QueueManager:
             video_name=job_create.video_name,
             transcript_name=job_create.transcript_name,
             whisper_model=job_create.whisper_model,
+            language=job_create.language,
             generate_srt=job_create.generate_srt,
         )
         self.jobs[job.id] = job
         await self.db.save_job(job)
         await self._broadcast_job(job)
         self._start_download(job.id)
+        return job
+
+    async def add_transcribe_only_job(self, job_create: JobCreate, video_path: str) -> Job:
+        job = Job(
+            url=job_create.url,
+            output_dir=job_create.output_dir,
+            video_name=job_create.video_name,
+            transcript_name=job_create.transcript_name,
+            whisper_model=job_create.whisper_model,
+            language=job_create.language,
+            generate_srt=job_create.generate_srt,
+        )
+        job.video_path = video_path
+        job.status = JobStatus.downloaded
+        job.download_progress = 100
+        self.jobs[job.id] = job
+        await self.db.save_job(job)
+        await self._broadcast_job(job)
+        await self.transcribe_queue.put(job.id)
+        self._ensure_transcription_worker()
         return job
 
     async def cancel_job(self, job_id: str):
@@ -43,6 +65,29 @@ class QueueManager:
         task = self._download_tasks.get(job_id)
         if task and not task.done():
             task.cancel()
+
+    async def retry_job(self, job_id: str):
+        job = self.jobs.get(job_id)
+        if not job:
+            return
+        job.error = None
+        if job.video_path and os.path.exists(job.video_path):
+            # Video exists, only retry transcription
+            job.status = JobStatus.downloaded
+            job.transcribe_progress = 0.0
+            await self.db.save_job(job)
+            await self._broadcast_job(job)
+            await self.transcribe_queue.put(job_id)
+            self._ensure_transcription_worker()
+        else:
+            # Need to re-download too
+            job.status = JobStatus.queued
+            job.download_progress = 0.0
+            job.transcribe_progress = 0.0
+            job.video_path = None
+            await self.db.save_job(job)
+            await self._broadcast_job(job)
+            self._start_download(job_id)
 
     async def get_job(self, job_id: str) -> Job | None:
         return self.jobs.get(job_id)

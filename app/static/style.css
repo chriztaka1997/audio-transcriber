@@ -152,6 +152,20 @@ select {
     font-size: 0.9rem;
 }
 
+.section-desc {
+    font-size: 0.85rem;
+    color: #777;
+    margin: -0.5rem 0 1rem 0;
+}
+
+.btn-transcribe {
+    background: #4caf50;
+}
+
+.btn-transcribe:hover {
+    background: #3c9f40;
+}
+
 .btn-primary {
     width: 100%;
     padding: 0.7rem;
@@ -231,6 +245,21 @@ select {
 .btn-cancel:hover {
     border-color: #f44336;
     color: #f44336;
+}
+
+.btn-retry {
+    padding: 0.25rem 0.75rem;
+    background: transparent;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #999;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btn-retry:hover {
+    border-color: #4a9eff;
+    color: #4a9eff;
 }
 
 /* Status badges */

@@ -2,8 +2,7 @@ const jobList = document.getElementById("job-list");
 const noJobs = document.getElementById("no-jobs");
 const jobCount = document.getElementById("job-count");
 const jobForm = document.getElementById("job-form");
-const validateDirBtn = document.getElementById("validate-dir-btn");
-const dirStatus = document.getElementById("dir-status");
+const browseDirBtn = document.getElementById("browse-dir-btn");
 
 const jobs = new Map(); // job_id -> job data
 
@@ -95,6 +94,7 @@ function renderJob(job) {
                 <span class="status-badge status-${job.status}">${job.status}</span>
             </div>
             <div class="job-actions">
+                ${["failed", "cancelled"].includes(job.status) ? `<button class="btn-retry" onclick="retryJob('${job.id}')">Retry</button>` : ""}
                 ${canCancel ? `<button class="btn-cancel" onclick="cancelJob('${job.id}')">Cancel</button>` : ""}
             </div>
         </div>
@@ -158,6 +158,7 @@ jobForm.addEventListener("submit", async (e) => {
     const videoName = document.getElementById("video-name").value.trim();
     const transcriptName = document.getElementById("transcript-name").value.trim();
     const whisperModel = document.getElementById("whisper-model").value;
+    const language = document.getElementById("language").value.trim() || "en";
     const generateSrt = document.getElementById("generate-srt").checked;
 
     if (!urlsText || !outputDir) return;
@@ -174,6 +175,7 @@ jobForm.addEventListener("submit", async (e) => {
                 url,
                 output_dir: outputDir,
                 whisper_model: whisperModel,
+                language,
                 generate_srt: generateSrt,
             };
             if (videoName) body.video_name = urls.length === 1 ? videoName : null;
@@ -199,33 +201,108 @@ jobForm.addEventListener("submit", async (e) => {
     document.getElementById("urls").value = "";
 });
 
-validateDirBtn.addEventListener("click", async () => {
-    const path = document.getElementById("output-dir").value.trim();
-    if (!path) {
-        dirStatus.textContent = "Enter a path first";
-        dirStatus.className = "dir-status invalid";
-        return;
-    }
-
+browseDirBtn.addEventListener("click", async () => {
+    browseDirBtn.disabled = true;
+    browseDirBtn.textContent = "Opening...";
     try {
-        const resp = await fetch("/api/validate-dir", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ path }),
-        });
+        const resp = await fetch("/api/pick-folder", { method: "POST" });
         const result = await resp.json();
-
-        if (result.valid) {
-            dirStatus.textContent = `Valid: ${result.resolved}`;
-            dirStatus.className = "dir-status valid";
-        } else {
-            dirStatus.textContent = result.error;
-            dirStatus.className = "dir-status invalid";
+        if (result.path) {
+            document.getElementById("output-dir").value = result.path;
         }
     } catch (err) {
-        dirStatus.textContent = "Error checking path";
-        dirStatus.className = "dir-status invalid";
+        console.error("Error opening folder picker:", err);
     }
+    browseDirBtn.disabled = false;
+    browseDirBtn.textContent = "Browse";
+});
+
+async function retryJob(jobId) {
+    try {
+        await fetch(`/api/jobs/${jobId}/retry`, { method: "POST" });
+    } catch (err) {
+        console.error("Error retrying job:", err);
+    }
+}
+
+// --- Transcribe Only ---
+
+document.getElementById("browse-file-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("browse-file-btn");
+    btn.disabled = true;
+    btn.textContent = "Opening...";
+    try {
+        const resp = await fetch("/api/pick-file", { method: "POST" });
+        const result = await resp.json();
+        if (result.path) {
+            document.getElementById("transcribe-file").value = result.path;
+        }
+    } catch (err) {
+        console.error("Error opening file picker:", err);
+    }
+    btn.disabled = false;
+    btn.textContent = "Browse";
+});
+
+document.getElementById("browse-transcribe-dir-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("browse-transcribe-dir-btn");
+    btn.disabled = true;
+    btn.textContent = "Opening...";
+    try {
+        const resp = await fetch("/api/pick-folder", { method: "POST" });
+        const result = await resp.json();
+        if (result.path) {
+            document.getElementById("transcribe-output-dir").value = result.path;
+        }
+    } catch (err) {
+        console.error("Error opening folder picker:", err);
+    }
+    btn.disabled = false;
+    btn.textContent = "Browse";
+});
+
+document.getElementById("transcribe-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const videoPath = document.getElementById("transcribe-file").value.trim();
+    const outputDir = document.getElementById("transcribe-output-dir").value.trim();
+    const transcriptName = document.getElementById("transcribe-name").value.trim();
+    const whisperModel = document.getElementById("transcribe-model").value;
+    const language = document.getElementById("transcribe-language").value.trim() || "en";
+    const generateSrt = document.getElementById("transcribe-srt").checked;
+
+    if (!videoPath) return;
+
+    const btn = document.querySelector(".btn-transcribe");
+    btn.disabled = true;
+    btn.textContent = "Adding...";
+
+    try {
+        const body = {
+            video_path: videoPath,
+            output_dir: outputDir,
+            transcript_name: transcriptName || null,
+            whisper_model: whisperModel,
+            language,
+            generate_srt: generateSrt,
+        };
+
+        const resp = await fetch("/api/jobs/transcribe-only", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json();
+            console.error("Failed to create transcribe job:", err);
+        }
+    } catch (err) {
+        console.error("Error creating transcribe job:", err);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Transcribe";
 });
 
 async function cancelJob(jobId) {

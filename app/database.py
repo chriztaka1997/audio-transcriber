@@ -22,6 +22,7 @@ class Database:
                     video_name TEXT,
                     transcript_name TEXT,
                     whisper_model TEXT DEFAULT 'turbo',
+                    language TEXT DEFAULT 'en',
                     generate_srt BOOLEAN DEFAULT 0,
                     status TEXT DEFAULT 'queued',
                     download_progress REAL DEFAULT 0,
@@ -38,9 +39,9 @@ class Database:
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute("""
                 INSERT INTO jobs (id, url, output_dir, video_name, transcript_name,
-                    whisper_model, generate_srt, status, download_progress,
+                    whisper_model, language, generate_srt, status, download_progress,
                     transcribe_progress, video_path, transcript_path, error, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     status=excluded.status,
                     download_progress=excluded.download_progress,
@@ -50,7 +51,7 @@ class Database:
                     error=excluded.error
             """, (
                 job.id, job.url, job.output_dir, job.video_name, job.transcript_name,
-                job.whisper_model, job.generate_srt, job.status.value,
+                job.whisper_model, job.language, job.generate_srt, job.status.value,
                 job.download_progress, job.transcribe_progress,
                 job.video_path, job.transcript_path, job.error,
                 job.created_at.isoformat()
@@ -96,6 +97,7 @@ class Database:
             video_name=row["video_name"],
             transcript_name=row["transcript_name"],
             whisper_model=row["whisper_model"],
+            language=row["language"] or "en",
             generate_srt=bool(row["generate_srt"]),
             status=JobStatus(row["status"]),
             download_progress=row["download_progress"] or 0.0,

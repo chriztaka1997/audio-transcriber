@@ -42,6 +42,14 @@ def _get_transcript_name(job: Job) -> str:
     return os.path.splitext(os.path.basename(job.video_path))[0]
 
 
+def _mps_available() -> bool:
+    try:
+        import torch
+        return torch.backends.mps.is_available()
+    except Exception:
+        return False
+
+
 async def transcribe_video(job: Job, progress_callback: Callable) -> str:
     if not job.video_path or not os.path.exists(job.video_path):
         raise RuntimeError(f"Video file not found: {job.video_path}")
@@ -59,26 +67,34 @@ async def transcribe_video(job: Job, progress_callback: Callable) -> str:
     transcript_name = _get_transcript_name(job)
     os.makedirs(job.output_dir, exist_ok=True)
 
+    # CPU is more stable than MPS for Whisper (MPS has known issues with some ops)
     cmd = [
         whisper_bin,
         job.video_path,
         "--model", job.whisper_model,
         "--output_format", output_format,
         "--output_dir", job.output_dir,
+        "--device", "cpu",
+        "--language", job.language,
         "--verbose", "True",
     ]
 
+    # Whisper prints verbose output to stderr, so we merge both streams
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
+        env={**os.environ, "PYTHONUNBUFFERED": "1"},
     )
 
     # Whisper prints lines like: [00:00.000 --> 00:30.000] Some transcribed text
     timestamp_pattern = re.compile(r'\[(\d+:\d+[\d:.]*)\s*-->\s*(\d+:\d+[\d:.]*)\]')
+    all_output = []
 
     async for raw_line in proc.stdout:
         line = raw_line.decode("utf-8", errors="replace")
+        all_output.append(line)
+        print(line, end="", flush=True)
         match = timestamp_pattern.search(line)
         if match and total_duration > 0:
             end_ts = _parse_timestamp(match.group(2))
@@ -88,7 +104,8 @@ async def transcribe_video(job: Job, progress_callback: Callable) -> str:
     await proc.wait()
 
     if proc.returncode != 0:
-        raise RuntimeError(f"Whisper exited with code {proc.returncode}")
+        err_text = "".join(all_output).strip()
+        raise RuntimeError(f"Whisper failed: {err_text[-500:] or f'exit code {proc.returncode}'}")
 
     await progress_callback(100)
 

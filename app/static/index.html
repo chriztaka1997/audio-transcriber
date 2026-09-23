@@ -25,10 +25,9 @@
                     <div class="form-group flex-grow">
                         <label for="output-dir">Destination folder</label>
                         <div class="input-with-button">
-                            <input type="text" id="output-dir" placeholder="~/Downloads/transcripts" required>
-                            <button type="button" id="validate-dir-btn">Validate</button>
+                            <input type="text" id="output-dir" placeholder="Click Browse to select a folder" required readonly>
+                            <button type="button" id="browse-dir-btn">Browse</button>
                         </div>
-                        <span id="dir-status" class="dir-status"></span>
                     </div>
                 </div>
 
@@ -55,6 +54,10 @@
                             <option value="turbo" selected>turbo</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="language">Language</label>
+                        <input type="text" id="language" value="en" placeholder="e.g. en, id, ja">
+                    </div>
                     <div class="form-group checkbox-group">
                         <label>
                             <input type="checkbox" id="generate-srt">
@@ -64,6 +67,65 @@
                 </div>
 
                 <button type="submit" class="btn-primary">Add to Queue</button>
+            </form>
+        </section>
+
+        <section class="form-section">
+            <h2>Transcribe Only</h2>
+            <p class="section-desc">Already have a video/audio file? Pick it and transcribe directly.</p>
+            <form id="transcribe-form">
+                <div class="form-row">
+                    <div class="form-group flex-grow">
+                        <label for="transcribe-file">Video / Audio file</label>
+                        <div class="input-with-button">
+                            <input type="text" id="transcribe-file" placeholder="Click Browse to select a file" required readonly>
+                            <button type="button" id="browse-file-btn">Browse</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-grow">
+                        <label for="transcribe-output-dir">Output folder (optional, defaults to file's folder)</label>
+                        <div class="input-with-button">
+                            <input type="text" id="transcribe-output-dir" placeholder="Same as file location" readonly>
+                            <button type="button" id="browse-transcribe-dir-btn">Browse</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="transcribe-name">Transcript filename (optional)</label>
+                        <input type="text" id="transcribe-name" placeholder="same as video name">
+                    </div>
+                    <div class="form-group">
+                        <label for="transcribe-model">Whisper model</label>
+                        <select id="transcribe-model">
+                            <option value="tiny">tiny</option>
+                            <option value="base">base</option>
+                            <option value="small">small</option>
+                            <option value="medium">medium</option>
+                            <option value="large">large</option>
+                            <option value="turbo" selected>turbo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transcribe-language">Language</label>
+                        <input type="text" id="transcribe-language" value="en" placeholder="e.g. en, id, ja">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="transcribe-srt">
+                            Also generate .srt (subtitles)
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary btn-transcribe">Transcribe</button>
             </form>
         </section>
 
